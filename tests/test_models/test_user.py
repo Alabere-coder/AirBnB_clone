@@ -1,68 +1,120 @@
-#!/usr/bin/python3
-"""Unittest for BaseModel"""
-import os
-import time
-import unittest
+#!/usr/bin/env python3
+"""Unittest user module.
+
+Test cases for user class and methods documentation and instances.
+"""
 from datetime import datetime
-from models import storage
-from models.user import User
+import inspect
+import models
+from models import user
+from models.base_model import BaseModel
+import pycodestyle
+import unittest
+User = user.User
+
+
+class TestUserDocs(unittest.TestCase):
+    """Tests to check the documentation and style of User class"""
+    @classmethod
+    def setUpClass(cls):
+        """Set up for the doc tests"""
+        cls.user_f = inspect.getmembers(User, inspect.isfunction)
+
+    def test_pep8_conformance_user(self):
+        """Test that models/user.py conforms to PEP8."""
+        pep8s = pycodestyle.StyleGuide(quiet=True)
+        result = pep8s.check_files(['models/user.py'])
+        self.assertEqual(result.total_errors, 0,
+                         "Found code style errors (and warnings).")
+
+    def test_pep8_conformance_test_user(self):
+        """Test that tests/test_models/test_user.py conforms to PEP8."""
+        pep8s = pycodestyle.StyleGuide(quiet=True)
+        result = pep8s.check_files(['tests/test_models/test_user.py'])
+        self.assertEqual(result.total_errors, 0,
+                         "Found code style errors (and warnings).")
+
+    def test_user_module_docstring(self):
+        """Test for the user.py module docstring"""
+        self.assertIsNot(user.__doc__, None,
+                         "user.py needs a docstring")
+        self.assertTrue(len(user.__doc__) >= 1,
+                        "user.py needs a docstring")
+
+    def test_user_class_docstring(self):
+        """Test for the City class docstring"""
+        self.assertIsNot(User.__doc__, None,
+                         "User class needs a docstring")
+        self.assertTrue(len(User.__doc__) >= 1,
+                        "User class needs a docstring")
+
+    def test_user_func_docstrings(self):
+        """Test for the presence of docstrings in User methods"""
+        for func in self.user_f:
+            self.assertIsNot(func[1].__doc__, None,
+                             "{:s} method needs a docstring".format(func[0]))
+            self.assertTrue(len(func[1].__doc__) >= 1,
+                            "{:s} method needs a docstring".format(func[0]))
 
 
 class TestUser(unittest.TestCase):
-    """test BaseModel"""
+    """Test the User class"""
+    def test_is_subclass(self):
+        """Test that User is a subclass of BaseModel"""
+        user = User()
+        self.assertIsInstance(user, BaseModel)
+        self.assertTrue(hasattr(user, "id"))
+        self.assertTrue(hasattr(user, "created_at"))
+        self.assertTrue(hasattr(user, "updated_at"))
 
-    def test_ainit(self):
-        """test blank basemodel init"""
-        snapshot = datetime.now()
-        um1 = User()
-        snapshot2 = datetime.now()
+    def test_email_attr(self):
+        """Test that User has attr email, and it's an empty string"""
+        user = User()
+        self.assertTrue(hasattr(user, "email"))
+        self.assertEqual(user.email, "")
 
-        self.assertIsInstance(um1.id, str)
-        self.assertTrue(len(um1.id) > 0)
-        self.assertTrue('User.' + um1.id in storage.all().keys())
+    def test_password_attr(self):
+        """Test that User has attr password, and it's an empty string"""
+        user = User()
+        self.assertTrue(hasattr(user, "password"))
+        self.assertEqual(user.password, "")
 
-        self.assertIsInstance(um1.created_at, datetime)
-        self.assertLess(um1.created_at, snapshot2)
-        self.assertGreater(um1.created_at, snapshot)
-        
-        self.assertIsInstance(um1.updated_at, datetime)
-        self.assertLess(um1.updated_at, snapshot2)
-        self.assertGreater(um1.updated_at, snapshot)
-        
-        um1.save()
-        self.assertIsInstance(um1.updated_at, datetime)
-        self.assertGreater(um1.updated_at, snapshot)
-        self.assertGreater(um1.updated_at, snapshot2)
-        del um1
-        
-    def test_init_dict(self):
-        """test dict basemodel init"""
-        test_dict = {'updated_at': datetime(1963, 11, 22, 12, 30, 00, 716921).isoformat('T')
-                     , 'id': 'z3854b62-93fa-fbbe-27de-630706f8313c', 'created_at': datetime(1963, 11, 22, 12, 30, 00, 716921).isoformat('T')}
-        um2 = User(**test_dict)
+    def test_first_name_attr(self):
+        """Test that User has attr first_name, and it's an empty string"""
+        user = User()
+        self.assertTrue(hasattr(user, "first_name"))
+        self.assertEqual(user.first_name, "")
 
-        self.assertIsInstance(um2.id, str)
-        self.assertTrue(len(um2.id) > 0)
-        self.assertTrue(um2.id == test_dict['id'])
-        
-        self.assertIsInstance(um2.created_at, datetime)
-        self.assertTrue(um2.created_at.isoformat('T') == test_dict['created_at'])
-        self.assertIsInstance(um2.updated_at, datetime)
-        self.assertTrue(um2.updated_at.isoformat('T') == test_dict['updated_at'])
-        um2.save()
-        self.assertGreater(um2.updated_at, um2.created_at)
-        del um2
+    def test_last_name_attr(self):
+        """Test that User has attr last_name, and it's an empty string"""
+        user = User()
+        self.assertTrue(hasattr(user, "last_name"))
+        self.assertEqual(user.last_name, "")
 
-    def test_attribute(self):
-        """asdad"""
-        um3 = User()
+    def test_to_dict_creates_dict(self):
+        """test to_dict method creates a dictionary with proper attrs"""
+        u = User()
+        new_d = u.to_dict()
+        self.assertEqual(type(new_d), dict)
+        self.assertFalse("_sa_instance_state" in new_d)
+        for attr in u.__dict__:
+            if attr != "_sa_instance_state":
+                self.assertTrue(attr in new_d)
+        self.assertTrue("__class__" in new_d)
 
-        self.assertTrue(hasattr(um3, "email"))
-        self.assertTrue(hasattr(um3, "password"))
-        self.assertTrue(hasattr(um3, "first_name"))
-        self.assertTrue(hasattr(um3, "last_name"))
+    def test_to_dict_values(self):
+        """test that values in dict returned from to_dict are correct"""
+        t_format = "%Y-%m-%dT%H:%M:%S.%f"
+        u = User()
+        new_d = u.to_dict()
+        self.assertEqual(new_d["__class__"], "User")
+        self.assertEqual(type(new_d["created_at"]), str)
+        self.assertEqual(type(new_d["updated_at"]), str)
+        self.assertEqual(new_d["created_at"], u.created_at.strftime(t_format))
+        self.assertEqual(new_d["updated_at"], u.updated_at.strftime(t_format))
 
-        self.assertIsInstance(um3.email, str)
-        self.assertIsInstance(um3.password, str)
-        self.assertIsInstance(um3.first_name, str)
-        self.assertIsInstance(um3.last_name, str)
+    def test_str(self):
+        """test that the str method has the correct output"""
+        user = User()
+        string = "[User] ({}) {}".format(user.id, user.__dict__)
+        self.assertEqual(string, str(user))
