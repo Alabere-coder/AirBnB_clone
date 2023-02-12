@@ -30,7 +30,7 @@ show <class_name> <id> - prints the string representation of an instance
 Can also be used as <class_name>.show(<id>)
 update <class_name> <id> <attribute_name> <attribute_value> - updates an instance by adding or updating attribute
 Can also be used as <class_name>.update(<id>, <attribute_name>, <attribute_value>) OR <class_name>.update(<id>, <dictionary_representation>)
-Example of use
+Example of use. 
 [vagrant@ubuntu AirBnB_clone ]$ ./console.py
 (hbnb) help
 
